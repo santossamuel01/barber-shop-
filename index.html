@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BARBER SHOP — Club & Atelier</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            950: '#0B0B0D',
+                            900: '#121214',
+                            800: '#1A1A1E',
+                            700: '#26262B',
+                        },
+                        amber: {
+                            glow: '#E5A93C',
+                            muted: '#9E7227',
+                            soft: 'rgba(229, 169, 60, 0.12)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Syne', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0B0D;
+            color: #E4E4E7;
+        }
+        .font-display { font-family: 'Syne', sans-serif; }
+        
+        /* Glassmorphism artesanal */
+        .glass-card {
+            background: linear-gradient(135deg, rgba(26, 26, 30, 0.7) 0%, rgba(18, 18, 20, 0.85) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .glass-card-amber {
+            background: linear-gradient(135deg, rgba(229, 169, 60, 0.08) 0%, rgba(18, 18, 20, 0.9) 100%);
+            border: 1px solid rgba(229, 169, 60, 0.25);
+        }
+
+        .amber-gradient-btn {
+            background: linear-gradient(135deg, #F3C067 0%, #E5A93C 60%, #B87E1F 100%);
+            color: #0B0B0D;
+            font-weight: 700;
+        }
+        .amber-gradient-btn:hover {
+            box-shadow: 0 0 20px rgba(229, 169, 60, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .amber-text-gradient {
+            background: linear-gradient(135deg, #FFE3A8 0%, #E5A93C 70%, #9E7227 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0B0B0D; }
+        ::-webkit-scrollbar-thumb { background: #26262B; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #E5A93C; }
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-dark-950 text-zinc-200 min-h-screen flex flex-col md:flex-row antialiased selection:bg-amber-glow selection:text-black pb-16 md:pb-0">
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Sidebar Desktop -->
+    <aside class="hidden md:flex flex-col w-72 bg-dark-900 border-r border-white/5 min-h-screen p-6 sticky top-0 h-screen justify-between z-30">
+        <div class="space-y-8">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3.5 pb-4 border-b border-white/5">
+                <div class="w-11 h-11 rounded-2xl amber-gradient-btn flex items-center justify-center text-xl shadow-lg">
+                    <i class="fa-solid fa-scissors"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-extrabold text-lg tracking-wider text-white uppercase">Barber Shop</h1>
+                    <p class="text-[10px] text-amber-glow font-medium uppercase tracking-widest">Club & Studio</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="space-y-1.5 text-xs font-medium">
+                <button onclick="switchTab('dashboard')" id="nav-btn-dashboard" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-sm"></i> Dashboard & Fila
+                </button>
+                <button onclick="switchTab('booking')" id="nav-btn-booking" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-calendar-plus w-5 text-center text-sm"></i> Agendar Atendimento
+                </button>
+                <button onclick="switchTab('catalog')" id="nav-btn-catalog" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-scissors w-5 text-center text-sm"></i> Catálogo de Cortes (+18)
+                </button>
+                <button onclick="switchTab('barbers')" id="nav-btn-barbers" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-users w-5 text-center text-sm"></i> Equipe de Barbeiros
+                </button>
+                <button onclick="switchTab('clients')" id="nav-btn-clients" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-address-book w-5 text-center text-sm"></i> Clientes VIP
+                </button>
+                <button onclick="switchTab('financial')" id="nav-btn-financial" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-wallet w-5 text-center text-sm"></i> Financeiro & Caixa
+                </button>
+                <button onclick="switchTab('lookbook')" id="nav-btn-lookbook" class="nav-btn w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl transition text-zinc-400 hover:text-white hover:bg-white/5">
+                    <i class="fa-solid fa-images w-5 text-center text-sm"></i> Lookbook & Estilos
+                </button>
+            </nav>
+        </div>
+
+        <!-- System Status -->
+        <div class="glass-card p-3.5 rounded-2xl flex items-center gap-3">
+            <div class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </div>
+            <div>
+                <p class="text-xs font-semibold text-white">Barbearia Aberta</p>
+                <p class="text-[10px] text-zinc-400">Atendimento em andamento</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 py-6 md:py-8 overflow-x-hidden">
+        
+        <!-- Header Mobile -->
+        <header class="flex md:hidden items-center justify-between mb-6 pb-4 border-b border-white/5">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl amber-gradient-btn flex items-center justify-center text-black font-bold">
+                    <i class="fa-solid fa-scissors"></i>
+                </div>
+                <div>
+                    <h1 class="font-display font-bold text-base text-white">BARBER SHOP</h1>
+                    <p class="text-[9px] text-amber-glow uppercase tracking-widest">Club Atelier</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= TAB 1: DASHBOARD ================= -->
+        <section id="tab-dashboard" class="tab-page space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Visão Operacional</span>
+                    <h2 class="text-2xl sm:text-3xl font-display font-extrabold text-white mt-1">Dashboard do Dia</h2>
+                </div>
+                <button onclick="switchTab('booking')" class="amber-gradient-btn px-5 py-3 rounded-xl text-xs flex items-center gap-2 self-start sm:self-auto transition">
+                    <i class="fa-solid fa-plus"></i> Novo Agendamento
+                </button>
+            </div>
+
+            <!-- Metric Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-medium text-zinc-400">Atendimentos Hoje</span>
+                        <i class="fa-solid fa-calendar-day text-amber-glow text-sm"></i>
+                    </div>
+                    <h3 id="dash-stat-today-count" class="text-2xl font-display font-bold text-white">0</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Agendamentos marcados</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-medium text-zinc-400">Receita Prevista</span>
+                        <i class="fa-solid fa-brazilian-real-sign text-emerald-400 text-sm"></i>
+                    </div>
+                    <h3 id="dash-stat-today-revenue" class="text-2xl font-display font-bold text-emerald-400">R$ 0,00</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Bruto total do dia</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-medium text-zinc-400">Clientes VIP</span>
+                        <i class="fa-solid fa-crown text-amber-glow text-sm"></i>
+                    </div>
+                    <h3 id="dash-stat-clients-count" class="text-2xl font-display font-bold text-white">0</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Cadastrados no clube</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs font-medium text-zinc-400">Barbeiro Destaque</span>
+                        <i class="fa-solid fa-star text-amber-glow text-sm"></i>
+                    </div>
+                    <h3 id="dash-stat-top-barber" class="text-base font-display font-bold text-amber-glow truncate">Lucas Fade</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Maior produtividade</p>
+                </div>
+            </div>
+
+            <!-- Queue & Analytics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Appointment Queue -->
+                <div class="lg:col-span-2 glass-card p-6 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                        <div>
+                            <h3 class="font-display font-bold text-base text-white">Fila de Espera & Horários</h3>
+                            <p class="text-xs text-zinc-400">Gerencie a entrada de clientes na cadeira.</p>
+                        </div>
+                        <span id="dash-current-date" class="text-xs font-semibold text-amber-glow bg-amber-soft px-3 py-1 rounded-full">--/--/----</span>
+                    </div>
+                    <div id="dash-queue-container" class="space-y-3">
+                        <!-- Dynamic render -->
+                    </div>
+                </div>
+
+                <!-- Live Charts -->
+                <div class="space-y-6">
+                    <div class="glass-card p-5 rounded-2xl space-y-4">
+                        <h3 class="font-display font-bold text-sm text-white">Distribuição por Serviços</h3>
+                        <div class="h-48 flex items-center justify-center">
+                            <canvas id="chart-services"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: AGENDAMENTO ================= -->
+        <section id="tab-booking" class="tab-page space-y-6 hidden">
+            <div>
+                <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Novo Atendimento</span>
+                <h2 class="text-2xl font-display font-extrabold text-white mt-1">Agendar Cliente na Cadeira</h2>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <!-- Step 1: Client Selection -->
+                    <div class="glass-card p-6 rounded-2xl space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-bold text-amber-glow uppercase tracking-wider flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-full bg-amber-soft text-amber-glow flex items-center justify-center text-[10px]">1</span>
+                                Selecione o Cliente
+                            </label>
+                            <button onclick="openModalNewClient()" class="text-xs text-zinc-400 hover:text-amber-glow transition">+ Novo Cliente</button>
+                        </div>
+                        <select id="book-client-select" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                            <!-- Dynamic -->
+                        </select>
+                    </div>
+
+                    <!-- Step 2: Service Selection -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4">
+                        <label class="text-xs font-bold text-amber-glow uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-amber-soft text-amber-glow flex items-center justify-center text-[10px]">2</span>
+                            Escolha o Corte ou Tratamento
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1" id="book-services-grid">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Barber Selection -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4">
+                        <label class="text-xs font-bold text-amber-glow uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-amber-soft text-amber-glow flex items-center justify-center text-[10px]">3</span>
+                            Barbeiro Responsável
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" id="book-barbers-grid">
+                            <!-- Dynamic -->
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Date & Time -->
+                    <div class="glass-card p-6 rounded-2xl space-y-4">
+                        <label class="text-xs font-bold text-amber-glow uppercase tracking-wider flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-full bg-amber-soft text-amber-glow flex items-center justify-center text-[10px]">4</span>
+                            Horário e Data
+                        </label>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Data</label>
+                                <input type="date" id="book-date" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Horário</label>
+                                <input type="time" id="book-time" value="14:00" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-zinc-400 mb-1">Pagamento</label>
+                                <select id="book-payment" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                                    <option value="Pix">Pix Instantâneo</option>
+                                    <option value="Cartão de Crédito">Cartão de Crédito</option>
+                                    <option value="Cartão de Débito">Cartão de Débito</option>
+                                    <option value="Dinheiro">Dinheiro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Summary Sidebar -->
+                <div class="space-y-6">
+                    <div class="glass-card-amber p-6 rounded-2xl space-y-6 sticky top-8">
+                        <h3 class="font-display font-bold text-base text-white border-b border-amber-glow/20 pb-3">Resumo da Agendamento</h3>
+                        
+                        <div class="space-y-3 text-xs">
+                            <div class="flex justify-between text-zinc-400">
+                                <span>Cliente:</span>
+                                <span id="summary-client" class="text-white font-medium">--</span>
+                            </div>
+                            <div class="flex justify-between text-zinc-400">
+                                <span>Serviço:</span>
+                                <span id="summary-service" class="text-white font-medium">--</span>
+                            </div>
+                            <div class="flex justify-between text-zinc-400">
+                                <span>Barbeiro:</span>
+                                <span id="summary-barber" class="text-white font-medium">--</span>
+                            </div>
+                            <div class="flex justify-between text-zinc-400">
+                                <span>Data/Hora:</span>
+                                <span id="summary-datetime" class="text-white font-medium">--</span>
+                            </div>
+                            <div class="border-t border-white/10 pt-3 flex justify-between items-center text-sm font-bold">
+                                <span class="text-white">Total:</span>
+                                <span id="summary-price" class="text-amber-glow text-lg">R$ 0,00</span>
+                            </div>
+                        </div>
+
+                        <button onclick="confirmAppointment()" class="w-full amber-gradient-btn py-4 rounded-xl text-xs uppercase tracking-wider font-extrabold shadow-lg transition">
+                            Confirmar Agendamento
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: CATÁLOGO VIP DE CORTES (+18) ================= -->
+        <section id="tab-catalog" class="tab-page space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Menu de Estilos</span>
+                    <h2 class="text-2xl font-display font-extrabold text-white mt-1">Catálogo de Cortes & Químicas</h2>
+                </div>
+                <!-- Category Filter -->
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1" id="catalog-category-tabs">
+                    <!-- Dynamic -->
+                </div>
+            </div>
+
+            <!-- Services Grid (+18 opções) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="catalog-full-grid">
+                <!-- Dynamic -->
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: EQUIPE DE BARBEIROS ================= -->
+        <section id="tab-barbers" class="tab-page space-y-6 hidden">
+            <div>
+                <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Profissionais</span>
+                <h2 class="text-2xl font-display font-extrabold text-white mt-1">Mestres Barbeiros</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="barbers-cards-grid">
+                <!-- Dynamic -->
+            </div>
+        </section>
+
+        <!-- ================= TAB 5: CLIENTES VIP ================= -->
+        <section id="tab-clients" class="tab-page space-y-6 hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Fidelidade</span>
+                    <h2 class="text-2xl font-display font-extrabold text-white mt-1">Base de Clientes VIP</h2>
+                </div>
+                <button onclick="openModalNewClient()" class="amber-gradient-btn px-5 py-3 rounded-xl text-xs flex items-center gap-2 self-start sm:self-auto">
+                    <i class="fa-solid fa-user-plus"></i> Adicionar Cliente
+                </button>
+            </div>
+
+            <!-- Client Filter & List -->
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+                <input type="text" id="client-search-input" onkeyup="filterClients()" placeholder="Buscar cliente por nome ou telefone..." class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead class="text-zinc-400 border-b border-white/10 uppercase font-medium">
+                            <tr>
+                                <th class="pb-3">Cliente</th>
+                                <th class="pb-3">Telefone</th>
+                                <th class="pb-3">Categoria</th>
+                                <th class="pb-3">Visitas</th>
+                                <th class="pb-3">Última Visita</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-table-body" class="divide-y divide-white/5">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 6: FINANCEIRO ================= -->
+        <section id="tab-financial" class="tab-page space-y-6 hidden">
+            <div>
+                <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Gestão Financeira</span>
+                <h2 class="text-2xl font-display font-extrabold text-white mt-1">Caixa & Desempenho</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="glass-card p-5 rounded-2xl">
+                    <span class="text-xs font-medium text-zinc-400 block mb-1">Receita Acumulada</span>
+                    <h3 id="fin-total-revenue" class="text-2xl font-display font-bold text-emerald-400">R$ 0,00</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Valor bruto total registrado</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <span class="text-xs font-medium text-zinc-400 block mb-1">Comissões Barbeiros (50%)</span>
+                    <h3 id="fin-total-commissions" class="text-2xl font-display font-bold text-amber-glow">R$ 0,00</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Repassado à equipe</p>
+                </div>
+                <div class="glass-card p-5 rounded-2xl">
+                    <span class="text-xs font-medium text-zinc-400 block mb-1">Lucro Líquido Barbearia</span>
+                    <h3 id="fin-net-profit" class="text-2xl font-display font-bold text-white">R$ 0,00</h3>
+                    <p class="text-[11px] text-zinc-500 mt-2">Caixa líquido da casa</p>
+                </div>
+            </div>
+
+            <div class="glass-card p-6 rounded-2xl space-y-4">
+                <h3 class="font-display font-bold text-base text-white">Produtividade Financeira por Barbeiro</h3>
+                <div class="h-64">
+                    <canvas id="chart-financial-barbers"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 7: LOOKBOOK ================= -->
+        <section id="tab-lookbook" class="tab-page space-y-6 hidden">
+            <div>
+                <span class="text-xs font-semibold text-amber-glow uppercase tracking-wider">Galeria de Inspiração</span>
+                <h2 class="text-2xl font-display font-extrabold text-white mt-1">Lookbook & Estilos Urbanos</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="lookbook-grid">
+                <!-- Dynamic photos -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Navigation Mobile Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-dark-900 border-t border-white/10 px-2 py-2 flex justify-around z-40">
+        <button onclick="switchTab('dashboard')" class="text-zinc-400 hover:text-amber-glow p-2 text-center">
+            <i class="fa-solid fa-chart-pie block text-base"></i>
+            <span class="text-[9px]">Painel</span>
+        </button>
+        <button onclick="switchTab('booking')" class="text-zinc-400 hover:text-amber-glow p-2 text-center">
+            <i class="fa-solid fa-calendar-plus block text-base"></i>
+            <span class="text-[9px]">Agendar</span>
+        </button>
+        <button onclick="switchTab('catalog')" class="text-zinc-400 hover:text-amber-glow p-2 text-center">
+            <i class="fa-solid fa-scissors block text-base"></i>
+            <span class="text-[9px]">Cortes</span>
+        </button>
+        <button onclick="switchTab('barbers')" class="text-zinc-400 hover:text-amber-glow p-2 text-center">
+            <i class="fa-solid fa-users block text-base"></i>
+            <span class="text-[9px]">Equipe</span>
+        </button>
+        <button onclick="switchTab('financial')" class="text-zinc-400 hover:text-amber-glow p-2 text-center">
+            <i class="fa-solid fa-wallet block text-base"></i>
+            <span class="text-[9px]">Caixa</span>
+        </button>
+    </nav>
+
+    <!-- Modal: Novo Cliente -->
+    <div id="modal-new-client" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card p-6 rounded-2xl max-w-md w-full space-y-4">
+            <div class="flex justify-between items-center border-b border-white/10 pb-3">
+                <h3 class="font-display font-bold text-lg text-white">Cadastrar Cliente VIP</h3>
+                <button onclick="closeModalNewClient()" class="text-zinc-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-zinc-400 mb-1">Nome Completo</label>
+                    <input type="text" id="modal-client-name" placeholder="Ex: Rodrigo Santoro" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                </div>
+                <div>
+                    <label class="block text-zinc-400 mb-1">WhatsApp / Telefone</label>
+                    <input type="text" id="modal-client-phone" placeholder="(11) 99999-8888" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                </div>
+                <div>
+                    <label class="block text-zinc-400 mb-1">Categoria de Cliente</label>
+                    <select id="modal-client-category" class="w-full bg-dark-800 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-amber-glow">
+                        <option value="Membro VIP">Membro VIP</option>
+                        <option value="Frequente">Frequente</option>
+                        <option value="Novo Cliente">Novo Cliente</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="saveNewClient()" class="w-full amber-gradient-btn py-3 rounded-xl text-xs uppercase font-extrabold mt-2">
+                Salvar Cliente
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // Data Store (LocalStorage Backup)
+        const DEFAULT_SERVICES = [
+            { id: 's1', name: 'Low Fade / Disfarçado Baixo', cat: 'Cortes', price: 65, duration: '45m', desc: 'Degradê suave rente à orelha, topo estilizado na tesoura.', img: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=500&auto=format&fit=crop&q=80' },
+            { id: 's2', name: 'Mid Fade Clássico', cat: 'Cortes', price: 60, duration: '40m', desc: 'Degradê médio versátil com transição perfeita.', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=500&auto=format&fit=crop&q=80' },
+            { id: 's3', name: 'High Fade Navalhado', cat: 'Cortes', price: 70, duration: '45m', desc: 'Degradê alto impactante com acabamento na navalha afiada.', img: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=500&auto=format&fit=crop&q=80' },
+            { id: 's4', name: 'Taper Fade Moderno', cat: 'Cortes', price: 65, duration: '40m', desc: 'Disfarçado apenas no pezinho e nas têmporas.', img: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=500&auto=format&fit=crop&q=80' },
+            { id: 's5', name: 'Buzz Cut + Risco Freestyle', cat: 'Cortes', price: 55, duration: '35m', desc: 'Corte militar raspado com risca personalizada no perfil.', img: 'https://images.unsplash.com/photo-1517832606589-715746203e51?w=500&auto=format&fit=crop&q=80' },
+            { id: 's6', name: 'Textured Crop / French Crop', cat: 'Cortes', price: 75, duration: '50m', desc: 'Franja reta em camada com textura despojada no topo.', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80' },
+            { id: 's7', name: 'Mullet Moderno / Burst Fade', cat: 'Cortes', price: 80, duration: '50m', desc: 'Estilo urbano retrô com degradê circular nas laterais.', img: 'https://images.unsplash.com/photo-1520338661084-680395057c93?w=500&auto=format&fit=crop&q=80' },
+            { id: 's8', name: 'Executive Slick Back', cat: 'Cortes', price: 70, duration: '45m', desc: 'Penteado clássico alinhado para trás com pomada brilhante.', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80' },
+            { id: 's9', name: 'Barba de Respeito com Toalha Quente', cat: 'Barba', price: 50, duration: '35m', desc: 'Alinhamento com óleos essenciais, massagem facial e toalha vaporizada.', img: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=500&auto=format&fit=crop&q=80' },
+            { id: 's10', name: 'Pigmentação de Barba & Alinhamento', cat: 'Barba', price: 65, duration: '40m', desc: 'Preenchimento de falhas com tintura hipoalergênica especial.', img: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=500&auto=format&fit=crop&q=80' },
+            { id: 's11', name: 'Platinado Global / Nevou', cat: 'Química', price: 160, duration: '120m', desc: 'Descoloração total do topo com matização platinada gelo.', img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=500&auto=format&fit=crop&q=80' },
+            { id: 's12', name: 'Luzes no Pente / Reflexos', cat: 'Química', price: 110, duration: '75m', desc: 'Mechas iluminação natural destacando o movimento do cabelo.', img: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=500&auto=format&fit=crop&q=80' },
+            { id: 's13', name: 'Selagem Capilar & Alisamento', cat: 'Química', price: 120, duration: '90m', desc: 'Redução de volume e alinhamento com queratina profunda.', img: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=500&auto=format&fit=crop&q=80' },
+            { id: 's14', name: 'Spa Capilar & Hidratação de Caviar', cat: 'Tratamento', price: 75, duration: '35m', desc: 'Lavagem com esfoliação de couro cabeludo e máscara nutritiva.', img: 'https://images.unsplash.com/photo-1517832606589-715746203e51?w=500&auto=format&fit=crop&q=80' },
+            { id: 's15', name: 'Combo Premium (Corte + Barba + Spa)', cat: 'Combos', price: 140, duration: '90m', desc: 'Experiência VIP completa com serviço de bar e tratamento total.', img: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=500&auto=format&fit=crop&q=80' }
+        ];
+
+        const BARBERS = [
+            { id: 'b1', name: 'Lucas "Fade" Silva', role: 'Master Barber', exp: '8 anos de experiência', rating: 4.9, status: 'Ocupado', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400&auto=format&fit=crop&q=80' },
+            { id: 'b2', name: 'Matheus "Navalha" Santos', role: 'Specialist in Beards', exp: '6 anos de experiência', rating: 4.8, status: 'Livre', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' },
+            { id: 'b3', name: 'Gabriel "Color" Lima', role: 'Colorist & Freestyle', exp: '5 anos de experiência', rating: 4.9, status: 'Livre', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80' }
+        ];
+
+        let state = {
+            services: JSON.parse(localStorage.getItem('bs_services')) || DEFAULT_SERVICES,
+            barbers: BARBERS,
+            clients: JSON.parse(localStorage.getItem('bs_clients')) || [
+                { id: 'c1', name: 'Felipe Amorim', phone: '(11) 98877-6655', cat: 'Membro VIP', visits: 12, lastVisit: '2026-10-25' },
+                { id: 'c2', name: 'Bruno Gagliasso', phone: '(11) 97766-5544', cat: 'Frequente', visits: 5, lastVisit: '2026-10-28' },
+                { id: 'c3', name: 'Carlos Henrique', phone: '(11) 96655-4433', cat: 'Novo Cliente', visits: 1, lastVisit: '2026-11-01' }
+            ],
+            appointments: JSON.parse(localStorage.getItem('bs_appointments')) || [
+                { id: 'a1', clientId: 'c1', serviceId: 's15', barberId: 'b1', date: '2026-11-03', time: '14:30', payment: 'Pix', status: 'Em Andamento' },
+                { id: 'a2', clientId: 'c2', serviceId: 's1', barberId: 'b2', date: '2026-11-03', time: '16:00', payment: 'Cartão de Crédito', status: 'Agendado' }
+            ],
+            selectedBooking: {
+                clientId: null,
+                serviceId: null,
+                barberId: null
+            }
+        };
+
+        // Initialize App
+        window.onload = function() {
+            document.getElementById('dash-current-date').innerText = new Date().toLocaleDateString('pt-BR');
+            document.getElementById('book-date').value = new Date().toISOString().split('T')[0];
+            
+            renderDashboard();
+            renderBookingOptions();
+            renderCatalog();
+            renderBarbers();
+            renderClients();
+            renderFinancial();
+            renderLookbook();
+            
+            initCharts();
+        };
+
+        // Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-page').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('text-white', 'bg-white/5'));
+            
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-btn-${tabId}`);
+            if(activeBtn) activeBtn.classList.add('text-white', 'bg-white/5');
+
+            if(tabId === 'dashboard') renderDashboard();
+            if(tabId === 'financial') renderFinancial();
+        }
+
+        // Toasts
+        function showToast(msg) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'glass-card-amber px-4 py-3 rounded-xl text-xs font-semibold text-white shadow-xl flex items-center gap-2 transition transform translate-y-2';
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-amber-glow"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Renders
+        function renderDashboard() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayApps = state.appointments.filter(a => a.date === today);
+            
+            document.getElementById('dash-stat-today-count').innerText = todayApps.length;
+            
+            let revenue = 0;
+            todayApps.forEach(a => {
+                const s = state.services.find(srv => srv.id === a.serviceId);
+                if(s) revenue += s.price;
+            });
+            document.getElementById('dash-stat-today-revenue').innerText = `R$ ${revenue.toFixed(2)}`;
+            document.getElementById('dash-stat-clients-count').innerText = state.clients.length;
+
+            const queueContainer = document.getElementById('dash-queue-container');
+            queueContainer.innerHTML = '';
+
+            if(todayApps.length === 0) {
+                queueContainer.innerHTML = '<p class="text-xs text-zinc-500 py-4 text-center">Nenhum atendimento na fila hoje.</p>';
+                return;
+            }
+
+            todayApps.forEach(app => {
+                const client = state.clients.find(c => c.id === app.clientId);
+                const service = state.services.find(s => s.id === app.serviceId);
+                const barber = state.barbers.find(b => b.id === app.barberId);
+
+                const item = document.createElement('div');
+                item.className = 'glass-card p-4 rounded-xl flex items-center justify-between gap-4';
+                item.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-amber-soft text-amber-glow flex items-center justify-center font-bold text-xs">
+                            ${app.time}
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-white">${client ? client.name : 'Cliente Excluído'}</h4>
+                            <p class="text-[11px] text-zinc-400">${service ? service.name : 'Serviço'} • com ${barber ? barber.name : 'Barbeiro'}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] uppercase font-bold px-2.5 py-1 rounded-full ${app.status === 'Em Andamento' ? 'bg-amber-soft text-amber-glow animate-pulse' : 'bg-emerald-500/10 text-emerald-400'}">
+                            ${app.status}
+                        </span>
+                    </div>
+                `;
+                queueContainer.appendChild(item);
+            });
+        }
+
+        function renderBookingOptions() {
+            // Clients
+            const clientSelect = document.getElementById('book-client-select');
+            clientSelect.innerHTML = state.clients.map(c => `<option value="${c.id}">${c.name} (${c.cat})</option>`).join('');
+            if(state.clients.length > 0) state.selectedBooking.clientId = state.clients[0].id;
+
+            clientSelect.onchange = (e) => {
+                state.selectedBooking.clientId = e.target.value;
+                updateSummary();
+            };
+
+            // Services
+            const servicesGrid = document.getElementById('book-services-grid');
+            servicesGrid.innerHTML = state.services.map(s => `
+                <div onclick="selectBookingService('${s.id}')" id="book-srv-${s.id}" class="glass-card p-3 rounded-xl border border-white/5 cursor-pointer hover:border-amber-glow transition flex items-center justify-between">
+                    <div>
+                        <h5 class="text-xs font-bold text-white">${s.name}</h5>
+                        <p class="text-[10px] text-zinc-400">${s.duration} • R$ ${s.price}</p>
+                    </div>
+                    <i class="fa-solid fa-check circle-icon text-xs text-transparent"></i>
+                </div>
+            `).join('');
+
+            // Barbers
+            const barbersGrid = document.getElementById('book-barbers-grid');
+            barbersGrid.innerHTML = state.barbers.map(b => `
+                <div onclick="selectBookingBarber('${b.id}')" id="book-brb-${b.id}" class="glass-card p-3 rounded-xl border border-white/5 cursor-pointer hover:border-amber-glow transition flex items-center gap-3">
+                    <img src="${b.img}" class="w-8 h-8 rounded-full object-cover">
+                    <div>
+                        <h5 class="text-xs font-bold text-white">${b.name}</h5>
+                        <p class="text-[10px] text-amber-glow font-medium">★ ${b.rating}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            if(state.services.length > 0) selectBookingService(state.services[0].id);
+            if(state.barbers.length > 0) selectBookingBarber(state.barbers[0].id);
+
+            document.getElementById('book-date').onchange = updateSummary;
+            document.getElementById('book-time').onchange = updateSummary;
+        }
+
+        function selectBookingService(id) {
+            state.selectedBooking.serviceId = id;
+            document.querySelectorAll('[id^="book-srv-"]').forEach(el => el.classList.remove('border-amber-glow', 'bg-amber-soft'));
+            const active = document.getElementById(`book-srv-${id}`);
+            if(active) active.classList.add('border-amber-glow', 'bg-amber-soft');
+            updateSummary();
+        }
+
+        function selectBookingBarber(id) {
+            state.selectedBooking.barberId = id;
+            document.querySelectorAll('[id^="book-brb-"]').forEach(el => el.classList.remove('border-amber-glow', 'bg-amber-soft'));
+            const active = document.getElementById(`book-brb-${id}`);
+            if(active) active.classList.add('border-amber-glow', 'bg-amber-soft');
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const client = state.clients.find(c => c.id === state.selectedBooking.clientId);
+            const service = state.services.find(s => s.id === state.selectedBooking.serviceId);
+            const barber = state.barbers.find(b => b.id === state.selectedBooking.barberId);
+            const date = document.getElementById('book-date').value;
+            const time = document.getElementById('book-time').value;
+
+            document.getElementById('summary-client').innerText = client ? client.name : '--';
+            document.getElementById('summary-service').innerText = service ? service.name : '--';
+            document.getElementById('summary-barber').innerText = barber ? barber.name : '--';
+            document.getElementById('summary-datetime').innerText = `${date} às ${time}`;
+            document.getElementById('summary-price').innerText = service ? `R$ ${service.price.toFixed(2)}` : 'R$ 0,00';
+        }
+
+        function confirmAppointment() {
+            if(!state.selectedBooking.serviceId || !state.selectedBooking.barberId) return;
+
+            const newApp = {
+                id: 'a_' + Date.now(),
+                clientId: state.selectedBooking.clientId,
+                serviceId: state.selectedBooking.serviceId,
+                barberId: state.selectedBooking.barberId,
+                date: document.getElementById('book-date').value,
+                time: document.getElementById('book-time').value,
+                payment: document.getElementById('book-payment').value,
+                status: 'Agendado'
+            };
+
+            state.appointments.push(newApp);
+            localStorage.setItem('bs_appointments', JSON.stringify(state.appointments));
+
+            showToast('Agendamento realizado com sucesso!');
+            switchTab('dashboard');
+        }
+
+        function renderCatalog() {
+            const categories = ['Todos', ...new Set(state.services.map(s => s.cat))];
+            const catTabs = document.getElementById('catalog-category-tabs');
+            
+            catTabs.innerHTML = categories.map((c, i) => `
+                <button onclick="filterCatalogCategory('${c}')" class="px-3.5 py-1.5 rounded-full text-xs font-semibold border transition ${i === 0 ? 'border-amber-glow bg-amber-soft text-amber-glow' : 'border-white/10 text-zinc-400 hover:text-white'}">
+                    ${c}
+                </button>
+            `).join('');
+
+            renderCatalogItems(state.services);
+        }
+
+        function filterCatalogCategory(cat) {
+            if(cat === 'Todos') renderCatalogItems(state.services);
+            else renderCatalogItems(state.services.filter(s => s.cat === cat));
+        }
+
+        function renderCatalogItems(items) {
+            const grid = document.getElementById('catalog-full-grid');
+            grid.innerHTML = items.map(s => `
+                <div class="glass-card rounded-2xl overflow-hidden group hover:border-amber-glow/40 transition">
+                    <div class="h-40 overflow-hidden relative">
+                        <img src="${s.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <span class="absolute top-3 right-3 bg-black/70 backdrop-blur-md text-amber-glow text-xs font-extrabold px-3 py-1 rounded-full border border-amber-glow/30">
+                            R$ ${s.price}
+                        </span>
+                    </div>
+                    <div class="p-5 space-y-2">
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-zinc-400">${s.cat} • ${s.duration}</span>
+                        <h4 class="font-display font-bold text-base text-white">${s.name}</h4>
+                        <p class="text-xs text-zinc-400 line-clamp-2">${s.desc}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderBarbers() {
+            const grid = document.getElementById('barbers-cards-grid');
+            grid.innerHTML = state.barbers.map(b => `
+                <div class="glass-card p-5 rounded-2xl space-y-4">
+                    <div class="flex items-center gap-4">
+                        <img src="${b.img}" class="w-14 h-14 rounded-2xl object-cover border border-amber-glow/30">
+                        <div>
+                            <h4 class="font-display font-bold text-base text-white">${b.name}</h4>
+                            <p class="text-xs text-amber-glow font-medium">${b.role}</p>
+                            <span class="text-[10px] text-zinc-400">${b.exp}</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs border-t border-white/5 pt-3">
+                        <span class="text-zinc-400">Avaliação: <b class="text-white">★ ${b.rating}</b></span>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${b.status === 'Livre' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-soft text-amber-glow'}">${b.status}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderClients() {
+            const tbody = document.getElementById('clients-table-body');
+            tbody.innerHTML = state.clients.map(c => `
+                <tr class="hover:bg-white/5 transition">
+                    <td class="py-3 font-semibold text-white">${c.name}</td>
+                    <td class="py-3 text-zinc-400">${c.phone}</td>
+                    <td class="py-3"><span class="bg-amber-soft text-amber-glow px-2.5 py-1 rounded-full font-bold">${c.cat}</span></td>
+                    <td class="py-3 text-zinc-300 font-bold">${c.visits} cortes</td>
+                    <td class="py-3 text-zinc-400">${c.lastVisit}</td>
+                </tr>
+            `).join('');
+        }
+
+        function filterClients() {
+            const val = document.getElementById('client-search-input').value.toLowerCase();
+            const filtered = state.clients.filter(c => c.name.toLowerCase().includes(val) || c.phone.includes(val));
+            const tbody = document.getElementById('clients-table-body');
+            tbody.innerHTML = filtered.map(c => `
+                <tr class="hover:bg-white/5 transition">
+                    <td class="py-3 font-semibold text-white">${c.name}</td>
+                    <td class="py-3 text-zinc-400">${c.phone}</td>
+                    <td class="py-3"><span class="bg-amber-soft text-amber-glow px-2.5 py-1 rounded-full font-bold">${c.cat}</span></td>
+                    <td class="py-3 text-zinc-300 font-bold">${c.visits} cortes</td>
+                    <td class="py-3 text-zinc-400">${c.lastVisit}</td>
+                </tr>
+            `).join('');
+        }
+
+        function openModalNewClient() { document.getElementById('modal-new-client').classList.remove('hidden'); }
+        function closeModalNewClient() { document.getElementById('modal-new-client').classList.add('hidden'); }
+
+        function saveNewClient() {
+            const name = document.getElementById('modal-client-name').value;
+            const phone = document.getElementById('modal-client-phone').value;
+            const cat = document.getElementById('modal-client-category').value;
+
+            if(!name) return;
+
+            const newC = { id: 'c_' + Date.now(), name, phone, cat, visits: 0, lastVisit: 'Hoje' };
+            state.clients.push(newC);
+            localStorage.setItem('bs_clients', JSON.stringify(state.clients));
+
+            closeModalNewClient();
+            renderClients();
+            renderBookingOptions();
+            showToast('Novo cliente registrado com sucesso!');
+        }
+
+        function renderFinancial() {
+            let totalRev = 0;
+            state.appointments.forEach(a => {
+                const srv = state.services.find(s => s.id === a.serviceId);
+                if(srv) totalRev += srv.price;
+            });
+
+            const commissions = totalRev * 0.5;
+            const net = totalRev - commissions;
+
+            document.getElementById('fin-total-revenue').innerText = `R$ ${totalRev.toFixed(2)}`;
+            document.getElementById('fin-total-commissions').innerText = `R$ ${commissions.toFixed(2)}`;
+            document.getElementById('fin-net-profit').innerText = `R$ ${net.toFixed(2)}`;
+        }
+
+        function renderLookbook() {
+            const grid = document.getElementById('lookbook-grid');
+            const photos = [
+                { title: 'Taper Fade & Beard Styling', img: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=600&auto=format&fit=crop&q=80' },
+                { title: 'Executive Slick Back', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80' },
+                { title: 'Modern Crop Texture', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&auto=format&fit=crop&q=80' }
+            ];
+
+            grid.innerHTML = photos.map(p => `
+                <div class="glass-card rounded-2xl overflow-hidden group">
+                    <img src="${p.img}" class="w-full h-64 object-cover group-hover:scale-105 transition duration-500">
+                    <div class="p-4 border-t border-white/5">
+                        <h4 class="font-display font-bold text-sm text-white">${p.title}</h4>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Charts
+        function initCharts() {
+            // Doughnut Chart
+            const ctxServices = document.getElementById('chart-services').getContext('2d');
+            new Chart(ctxServices, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cortes', 'Barba', 'Químicas', 'Tratamentos'],
+                    datasets: [{
+                        data: [55, 25, 12, 8],
+                        backgroundColor: ['#E5A93C', '#F3C067', '#9E7227', '#26262B'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#A1A1AA', font: { family: 'Inter', size: 10 } } } }
+                }
+            });
+
+            // Bar Chart Financial
+            const ctxFin = document.getElementById('chart-financial-barbers').getContext('2d');
+            new Chart(ctxFin, {
+                type: 'bar',
+                data: {
+                    labels: ['Lucas Fade', 'Matheus Navalha', 'Gabriel Color'],
+                    datasets: [{
+                        label: 'Faturamento (R$)',
+                        data: [1850, 1420, 980],
+                        backgroundColor: '#E5A93C',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: '#A1A1AA' }, grid: { display: false } },
+                        y: { ticks: { color: '#A1A1AA' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
